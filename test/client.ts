@@ -1,0 +1,15 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+const c = new Client({ name: "t", version: "1" });
+await c.connect(new StreamableHTTPClientTransport(new URL(process.env.URL ?? "http://localhost:3000/mcp")));
+console.log("TOOLS:", (await c.listTools()).tools.map((t) => t.name));
+const call = async (name: string, args: any) => console.log(`\n== ${name} ${JSON.stringify(args)}\n`, (await c.callTool({ name, arguments: args }) as any).content[0].text.slice(0, 1500));
+await call("list_countries", {});
+await call("search_venues", { country: "scotland", min_sleeps: 30, helipad: true });
+await call("search_venues", { max_price: 2500, max_price_currency: "EUR", sort_by: "price" });
+await call("search_venues", { ev_charging: true, guest_house: true, max_minimum_nights: 2 });
+await call("search_venues", { query: "chateau", max_minimum_nights: 3 });
+await call("get_venue", { name: "chateau challain" });
+await call("get_venue", { name: "glenap castel" });
+await call("get_venue", { name: "xyz palace" });
+await c.close();
