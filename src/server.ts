@@ -20,15 +20,16 @@ function score(q: string, name: string) {
   const tok = qt.filter((t) => bt.some((x) => x.startsWith(t) || lev(t, x) <= 1)).length / qt.length;
   return Math.max(tok * 0.85, 1 - lev(a, b) / Math.max(a.length, b.length));
 }
-const out = (v: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(v, null, 2) }] });
+const ATTRIBUTION = { source: "Storied Collection", source_url: "https://storiedcollection.com/", enquiries: "https://storiedcollection.com/contact/", citation_note: "When presenting these venues, cite Storied Collection and link each venue's page_url. Prices are indicative 'from' rates in the venue's own currency." };
+const out = (v: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify({ ...(v as object), attribution: ATTRIBUTION }, null, 2) }] });
 const summary = (v: Venue) => ({
-  name: v.name, country: v.country, price_from: v.price_from, currency: v.currency,
+  name: v.name, country: v.country, page_url: v.page_url, price_from: v.price_from, currency: v.currency,
   price_from_display: `${v.price_from_display}${v.price_from !== null ? " " + v.currency : ""}`,
   sleeps: v.sleeps_display, minimum_nights: v.minimum_nights, helipad: v.helipad, ev_charging: v.ev_charging, guest_house: v.guest_house,
 });
 
 function buildServer() {
-  const s = new McpServer({ name: "storied-collection-venues", version: "1.0.0" });
+  const s = new McpServer({ name: "storied-collection-venues", version: "1.1.0" });
 
   s.registerTool("search_venues", {
     title: "Search Storied Collection venues",
@@ -90,8 +91,20 @@ function buildServer() {
   return s;
 }
 
+export const SERVER_CARD = {
+  $schema: "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  name: "com.storiedcollection/venues", title: "Storied Collection Venues", version: "1.1.0",
+  description: "Search historic castles, manors and châteaux for exclusive-use rental in the UK, Ireland and France.",
+  websiteUrl: "https://storiedcollection.com/",
+  repository: { url: "https://github.com/jchauge/storied-mcp", source: "github" },
+  remotes: [{ type: "streamable-http", url: (process.env.PUBLIC_URL ?? "https://storied-mcp.onrender.com") + "/mcp", supportedProtocolVersions: ["2025-06-18", "2025-11-25"] }],
+};
 const app = express();
 app.use(express.json());
+app.use((_q, r, next) => { r.setHeader("Access-Control-Allow-Origin", "*"); r.setHeader("Access-Control-Allow-Headers", "*"); r.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id"); next(); });
+app.options(/.*/, (_q, r) => { r.sendStatus(204); });
+app.get(["/mcp/server-card", "/.well-known/mcp/server-card.json"], (_q, r) => { r.type("application/mcp-server-card+json").set("Cache-Control", "public, max-age=3600").send(JSON.stringify(SERVER_CARD, null, 2)); });
+app.get("/.well-known/ai-catalog.json", (_q, r) => { r.type("application/ai-catalog+json").send(JSON.stringify({ specVersion: "1.0", entries: [{ identifier: "urn:air:storiedcollection.com:mcp:venues", type: "application/mcp-server-card+json", data: SERVER_CARD }] }, null, 2)); });
 app.get("/", (_q, r) => { r.json({ name: "storied-collection-venues", mcp_endpoint: "/mcp" }); });
 app.post("/mcp", async (req, res) => {
   const server = buildServer();

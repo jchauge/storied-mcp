@@ -12,6 +12,13 @@ export interface Venue {
   rooms_in_main_house: number | null; sleeps: number | null; sleeps_display: string;
   guest_house: string; has_guest_house: boolean | null; minimum_nights: number | null;
   helipad: boolean | null; ev_charging: boolean | null;
+  page_url: string; description: string;
+}
+
+const SLUG_OVERRIDES: Record<string, string> = { "Château Rouffalac": "chateau-de-rouffillac", "Graythwaite Hall": "greywaithe-hall" };
+export function pageUrl(name: string) {
+  const slug = SLUG_OVERRIDES[name] ?? name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `https://storiedcollection.com/${slug}/`;
 }
 
 /** "3,000" -> 3000, "100+" -> 100, "1600s" -> 1600, "On request"/"" -> null */
@@ -41,6 +48,10 @@ export function rowsToVenues(rows: string[][]): Venue[] {
       has_guest_house: gh === "" ? null : gh.toLowerCase() === "none" ? false : true,
       minimum_nights: num(col(r, "Minimum Nights")),
       helipad: yesNo(col(r, "Helipad")), ev_charging: yesNo(col(r, "Electric Car Charge")),
+      // Optional sheet column "Page URL" overrides the derived link.
+      page_url: col(r, "Page URL") || pageUrl(col(r, "Property")),
+      description: `${col(r, "Property")} is a historic exclusive-use venue in ${col(r, "Country")}, originally built ${col(r, "Originally Built")}, sleeping ${col(r, "Sleeps")} guests` +
+        (num(col(r, "Pricing From")) !== null ? `, priced from ${col(r, "Pricing From")} ${col(r, "Currency")}` : ", price on request") + `, available to rent through Storied Collection.`,
     };
   });
 }
