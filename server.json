@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "com.storiedcollection/venues",
+  "name": "io.github.jchauge/storied-mcp",
   "title": "Storied Collection Venues",
   "description": "Search historic castles, manors and châteaux for exclusive-use rental in the UK, Ireland and France.",
   "websiteUrl": "https://storiedcollection.com/",

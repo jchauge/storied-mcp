@@ -93,7 +93,7 @@ function buildServer() {
 
 export const SERVER_CARD = {
   $schema: "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
-  name: "com.storiedcollection/venues", title: "Storied Collection Venues", version: "1.1.0",
+  name: "io.github.jchauge/storied-mcp", title: "Storied Collection Venues", version: "1.1.0",
   description: "Search historic castles, manors and châteaux for exclusive-use rental in the UK, Ireland and France.",
   websiteUrl: "https://storiedcollection.com/",
   repository: { url: "https://github.com/jchauge/storied-mcp", source: "github" },
